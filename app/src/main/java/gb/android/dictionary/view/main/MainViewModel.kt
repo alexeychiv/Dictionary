@@ -2,21 +2,24 @@ package gb.android.dictionary.view.main
 
 import androidx.lifecycle.LiveData
 import gb.android.dictionary.model.data.AppState
-import gb.android.dictionary.model.datasource.DataSourceLocal
-import gb.android.dictionary.model.datasource.DataSourceRemote
-import gb.android.dictionary.model.repository.RepositoryImpl
 import gb.android.dictionary.viewmodel.BaseViewModel
+import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.observers.DisposableObserver
+import javax.inject.Inject
 
 
-class MainViewModel(
-    private val interactor: MainInteractor = MainInteractor(
-        RepositoryImpl(DataSourceRemote()),
-        RepositoryImpl(DataSourceLocal())
-    )
+class MainViewModel @Inject constructor(
+    private val interactor: MainInteractor
 ) : BaseViewModel<AppState>() {
 
     private var appState: AppState? = null
+
+    fun subscribe(): LiveData<AppState> {
+        return liveDataForViewToObserve
+    }
+
+    private fun doOnSubscribe(): (Disposable) -> Unit =
+        { liveDataForViewToObserve.value = AppState.Loading(null) }
 
     override fun getData(word: String, isOnline: Boolean): LiveData<AppState> {
         compositeDisposable.add(

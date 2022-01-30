@@ -7,26 +7,28 @@ import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import dagger.android.AndroidInjection
 import gb.android.dictionary.databinding.ActivityMainBinding
 import gb.android.dictionary.model.data.AppState
 import gb.android.dictionary.model.data.DataModel
+import gb.android.dictionary.utils.network.isOnline
 import gb.android.dictionary.view.base.BaseActivity
 import gb.android.dictionary.view.main.adapter.MainAdapter
+import javax.inject.Inject
 
 
-class MainActivity : BaseActivity<AppState>() {
+class MainActivity : BaseActivity<AppState, MainInteractor>() {
 
     private var _binding: ActivityMainBinding? = null
     private val binding: ActivityMainBinding
         get() = _binding!!
 
-    override val viewModel: MainViewModel by lazy {
-        ViewModelProvider.NewInstanceFactory().create(MainViewModel::class.java)
-    }
+    @Inject
+    internal lateinit var viewModelFactory: ViewModelProvider.Factory
 
-    private val observer = Observer<AppState> { renderData(it) }
+    override lateinit var viewModel: MainViewModel
 
-    private var adapter: MainAdapter? = null
+    private val adapter: MainAdapter by lazy { MainAdapter(onListItemClickListener) }
     private val onListItemClickListener: MainAdapter.OnListItemClickListener =
         object : MainAdapter.OnListItemClickListener {
             override fun onItemClick(data: DataModel) {
@@ -35,17 +37,30 @@ class MainActivity : BaseActivity<AppState>() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidInjection.inject(this)
+
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        viewModel = viewModelFactory.create(MainViewModel::class.java)
+        viewModel.subscribe().observe(this@MainActivity, Observer<AppState> { renderData(it) })
 
         binding.btnSearch.setOnClickListener {
             val word = binding.etWord.text.toString()
 
             if (word.isNotEmpty()) {
-                viewModel.getData(word, true).observe(this@MainActivity, observer)
+                isNetworkAvailable = isOnline(applicationContext)
+                if (isNetworkAvailable) {
+                    viewModel.getData(word, isNetworkAvailable)
+                } else {
+                    showNoInternetConnectionDialog()
+                }
             }
         }
+
+        binding.rvResultList.layoutManager = LinearLayoutManager(applicationContext)
+        binding.rvResultList.adapter = adapter
     }
 
     override fun onDestroy() {
@@ -56,19 +71,15 @@ class MainActivity : BaseActivity<AppState>() {
     override fun renderData(appState: AppState) {
         when (appState) {
             is AppState.Success -> {
+                showViewWorking()
                 val dataModel = appState.data
-                if (dataModel == null || dataModel.isEmpty()) {
-                    showErrorScreen("Error: empty server response!")
+                if (dataModel.isNullOrEmpty()) {
+                    showAlertDialog(
+                        "Sorry!",
+                        "No definitions found!"
+                    )
                 } else {
-                    showViewSuccess()
-                    if (adapter == null) {
-                        binding.rvResultList.layoutManager =
-                            LinearLayoutManager(applicationContext)
-                        binding.rvResultList.adapter =
-                            MainAdapter(onListItemClickListener, dataModel)
-                    } else {
-                        adapter!!.setData(dataModel)
-                    }
+                    adapter.setData(dataModel)
                 }
             }
             is AppState.Loading -> {
@@ -83,34 +94,17 @@ class MainActivity : BaseActivity<AppState>() {
                 }
             }
             is AppState.Error -> {
-                showErrorScreen(appState.error.message)
+                showViewWorking()
+                showAlertDialog("Error!", appState.error.message)
             }
         }
     }
 
-    private fun showErrorScreen(error: String?) {
-        showViewError()
-        binding.tvError.text = error ?: "Error"
-        binding.btnReload.setOnClickListener {
-            viewModel.getData("hi", true).observe(this@MainActivity, observer)
-        }
-    }
-
-    private fun showViewSuccess() {
-        binding.successLinearLayout.visibility = android.view.View.VISIBLE
-        binding.loadingFrameLayout.visibility = android.view.View.GONE
-        binding.errorLinearLayout.visibility = android.view.View.GONE
+    private fun showViewWorking() {
+        binding.loadingFrameLayout.visibility = GONE
     }
 
     private fun showViewLoading() {
-        binding.successLinearLayout.visibility = android.view.View.GONE
-        binding.loadingFrameLayout.visibility = android.view.View.VISIBLE
-        binding.errorLinearLayout.visibility = android.view.View.GONE
-    }
-
-    private fun showViewError() {
-        binding.successLinearLayout.visibility = android.view.View.GONE
-        binding.loadingFrameLayout.visibility = android.view.View.GONE
-        binding.errorLinearLayout.visibility = android.view.View.VISIBLE
+        binding.loadingFrameLayout.visibility = VISIBLE
     }
 }

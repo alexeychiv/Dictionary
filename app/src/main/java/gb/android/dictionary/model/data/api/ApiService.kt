@@ -1,4 +1,4 @@
-package gb.android.dictionary.model.datasource
+package gb.android.dictionary.model.data.api
 
 import gb.android.dictionary.model.data.DataModel
 import io.reactivex.rxjava3.core.Observable

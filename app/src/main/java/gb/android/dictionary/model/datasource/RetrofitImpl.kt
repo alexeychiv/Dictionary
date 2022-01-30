@@ -1,6 +1,8 @@
 package gb.android.dictionary.model.datasource
 
 import gb.android.dictionary.model.data.DataModel
+import gb.android.dictionary.model.data.api.ApiService
+import gb.android.dictionary.model.data.api.BaseInterceptor
 import io.reactivex.rxjava3.core.Observable
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient

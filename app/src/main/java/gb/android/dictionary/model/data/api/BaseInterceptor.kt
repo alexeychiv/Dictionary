@@ -1,4 +1,4 @@
-package gb.android.dictionary.model.datasource
+package gb.android.dictionary.model.data.api
 
 import okhttp3.Interceptor
 import okhttp3.Response
