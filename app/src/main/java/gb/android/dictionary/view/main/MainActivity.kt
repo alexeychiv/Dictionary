@@ -4,17 +4,14 @@ import android.os.Bundle
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.Toast
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import dagger.android.AndroidInjection
 import gb.android.dictionary.databinding.ActivityMainBinding
 import gb.android.dictionary.model.data.AppState
 import gb.android.dictionary.model.data.DataModel
 import gb.android.dictionary.utils.network.isOnline
 import gb.android.dictionary.view.base.BaseActivity
 import gb.android.dictionary.view.main.adapter.MainAdapter
-import javax.inject.Inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
 class MainActivity : BaseActivity<AppState, MainInteractor>() {
@@ -23,10 +20,7 @@ class MainActivity : BaseActivity<AppState, MainInteractor>() {
     private val binding: ActivityMainBinding
         get() = _binding!!
 
-    @Inject
-    internal lateinit var viewModelFactory: ViewModelProvider.Factory
-
-    override lateinit var viewModel: MainViewModel
+    override lateinit var vModel: MainViewModel
 
     private val adapter: MainAdapter by lazy { MainAdapter(onListItemClickListener) }
     private val onListItemClickListener: MainAdapter.OnListItemClickListener =
@@ -37,14 +31,11 @@ class MainActivity : BaseActivity<AppState, MainInteractor>() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        AndroidInjection.inject(this)
-
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        viewModel = viewModelFactory.create(MainViewModel::class.java)
-        viewModel.subscribe().observe(this@MainActivity, Observer<AppState> { renderData(it) })
+        initViewModel()
 
         binding.btnSearch.setOnClickListener {
             val word = binding.etWord.text.toString()
@@ -52,7 +43,7 @@ class MainActivity : BaseActivity<AppState, MainInteractor>() {
             if (word.isNotEmpty()) {
                 isNetworkAvailable = isOnline(applicationContext)
                 if (isNetworkAvailable) {
-                    viewModel.getData(word, isNetworkAvailable)
+                    vModel.getData(word, isNetworkAvailable)
                 } else {
                     showNoInternetConnectionDialog()
                 }
@@ -61,6 +52,15 @@ class MainActivity : BaseActivity<AppState, MainInteractor>() {
 
         binding.rvResultList.layoutManager = LinearLayoutManager(applicationContext)
         binding.rvResultList.adapter = adapter
+    }
+
+    private fun initViewModel() {
+        if (binding.rvResultList.adapter != null) {
+            throw IllegalStateException("The ViewModel should be initialised first")
+        }
+        val viewModel: MainViewModel by viewModel()
+        vModel = viewModel
+        vModel.subscribe().observe(this@MainActivity, { renderData(it) })
     }
 
     override fun onDestroy() {

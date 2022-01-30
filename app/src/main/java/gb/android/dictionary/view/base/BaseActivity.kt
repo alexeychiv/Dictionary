@@ -12,7 +12,11 @@ import gb.android.dictionary.viewmodel.Interactor
 
 abstract class BaseActivity<T : AppState, I : Interactor<T>> : AppCompatActivity() {
 
-    abstract val viewModel: BaseViewModel<T>
+    companion object {
+        private const val DIALOG_FRAGMENT_TAG = "74a54328-5d62-46bf-ab6b-cbf5d8c79522"
+    }
+
+    abstract val vModel: BaseViewModel<T>
 
     protected var isNetworkAvailable: Boolean = false
 
@@ -47,7 +51,4 @@ abstract class BaseActivity<T : AppState, I : Interactor<T>> : AppCompatActivity
 
     abstract fun renderData(dataModel: T)
 
-    companion object {
-        private const val DIALOG_FRAGMENT_TAG = "74a54328-5d62-46bf-ab6b-cbf5d8c79522"
-    }
 }
