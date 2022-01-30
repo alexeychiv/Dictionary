@@ -12,8 +12,7 @@ import gb.android.dictionary.model.data.DataModel
 class MainAdapter(
     private var onListItemClickListener: OnListItemClickListener,
     private var data: List<DataModel>
-) :
-    RecyclerView.Adapter<MainAdapter.RecyclerItemViewHolder>() {
+) : RecyclerView.Adapter<MainAdapter.RecyclerItemViewHolder>() {
 
     fun setData(data: List<DataModel>) {
         this.data = data

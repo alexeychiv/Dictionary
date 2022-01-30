@@ -10,7 +10,7 @@ import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 
 
-class RetrofitImplementation : DataSource<List<DataModel>> {
+class RetrofitImpl : DataSource<List<DataModel>> {
 
     companion object {
         private const val BASE_URL_LOCATIONS = "https://dictionary.skyeng.ru/api/public/v1/"

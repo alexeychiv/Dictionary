@@ -7,6 +7,11 @@ import java.io.IOException
 
 class BaseInterceptor private constructor() : Interceptor {
 
+    companion object {
+        val interceptor: BaseInterceptor
+            get() = BaseInterceptor()
+    }
+
     private var responseCode: Int = 0
 
     @Throws(IOException::class)
@@ -28,7 +33,6 @@ class BaseInterceptor private constructor() : Interceptor {
         return statusCode
     }
 
-
     enum class ServerResponseStatusCode {
         INFO,
         SUCCESS,
@@ -36,12 +40,6 @@ class BaseInterceptor private constructor() : Interceptor {
         CLIENT_ERROR,
         SERVER_ERROR,
         UNDEFINED_ERROR
-    }
-
-    companion object {
-
-        val interceptor: BaseInterceptor
-            get() = BaseInterceptor()
     }
 
 }

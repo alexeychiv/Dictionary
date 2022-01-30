@@ -1,17 +1,17 @@
 package gb.android.dictionary.view.main
 
 import android.os.Bundle
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.widget.Toast
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import gb.android.dictionary.databinding.ActivityMainBinding
 import gb.android.dictionary.model.data.AppState
 import gb.android.dictionary.model.data.DataModel
-import gb.android.dictionary.presenter.Presenter
 import gb.android.dictionary.view.base.BaseActivity
-import gb.android.dictionary.view.base.View
 import gb.android.dictionary.view.main.adapter.MainAdapter
-import android.view.View.GONE
-import android.view.View.VISIBLE
 
 
 class MainActivity : BaseActivity<AppState>() {
@@ -20,9 +20,11 @@ class MainActivity : BaseActivity<AppState>() {
     private val binding: ActivityMainBinding
         get() = _binding!!
 
-    override fun createPresenter(): Presenter<AppState, View> {
-        return MainPresenterImpl()
+    override val viewModel: MainViewModel by lazy {
+        ViewModelProvider.NewInstanceFactory().create(MainViewModel::class.java)
     }
+
+    private val observer = Observer<AppState> { renderData(it) }
 
     private var adapter: MainAdapter? = null
     private val onListItemClickListener: MainAdapter.OnListItemClickListener =
@@ -31,7 +33,6 @@ class MainActivity : BaseActivity<AppState>() {
                 Toast.makeText(this@MainActivity, data.text, Toast.LENGTH_SHORT).show()
             }
         }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,12 +43,9 @@ class MainActivity : BaseActivity<AppState>() {
             val word = binding.etWord.text.toString()
 
             if (word.isNotEmpty()) {
-                presenter.getData(word, true)
+                viewModel.getData(word, true).observe(this@MainActivity, observer)
             }
-
         }
-
-
     }
 
     override fun onDestroy() {
@@ -94,7 +92,7 @@ class MainActivity : BaseActivity<AppState>() {
         showViewError()
         binding.tvError.text = error ?: "Error"
         binding.btnReload.setOnClickListener {
-            presenter.getData("hi", true)
+            viewModel.getData("hi", true).observe(this@MainActivity, observer)
         }
     }
 
@@ -115,6 +113,4 @@ class MainActivity : BaseActivity<AppState>() {
         binding.loadingFrameLayout.visibility = android.view.View.GONE
         binding.errorLinearLayout.visibility = android.view.View.VISIBLE
     }
-
-
 }

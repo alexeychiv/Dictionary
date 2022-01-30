@@ -3,7 +3,7 @@ package gb.android.dictionary.view.main
 import gb.android.dictionary.model.data.AppState
 import gb.android.dictionary.model.data.DataModel
 import gb.android.dictionary.model.repository.Repository
-import gb.android.dictionary.presenter.Interactor
+import gb.android.dictionary.viewmodel.Interactor
 import io.reactivex.rxjava3.core.Observable
 
 class MainInteractor(
